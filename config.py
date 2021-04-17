@@ -1,0 +1,23 @@
+class Config:
+    DARK_SQ_COLOR = '#605f63'
+    LIGHT_SQ_COLOR = '#a8a4a8'
+    WHITE_PIECE_COLOR = 'white'
+    BLACK_PIECE_COLOR = 'black'
+
+    SELECTED_COLOR = '#C9C6C9' #C5BFC5
+    RED_COLOR = 'crimson'#F38471'
+
+    BOARD_GAP = 1
+
+    CHESS_FONT_SIZE = 33
+    CHESS_FONT_SPACING_ROW = 3
+    CHESS_FONT_SPACING_COL = 6
+
+    CAPTURES_FONT_SIZE = 15
+
+    TEXT_CON_ROW = 30
+    CAPTURES_CON_ROW = 27
+
+    SHOW_SCORE = False
+
+    DEBUG = False
