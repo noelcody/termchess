@@ -56,24 +56,23 @@ class Game():
         self._stockfish = StockfishWrapper()
 
     def loop(self):
-        self._render_move_start()
+        self._move_setup()
         self._make_move(self._get_move())
         self._render_move_end()
         self._prepare_for_next_move()
 
-    def _render_move_start(self):
+    def _move_setup(self):
         self._board_con.render(self._board)
         self._captures_con.render(self._captures)
         self._text_con.set_evaluation(self._stockfish.get_evaluation())
         self._render_detail()
         terminal.refresh()
-
-        next_best_move = self._long_notation_parser.parse_to_move(self._player, self._stockfish.get_best_move())
-        # TODO
         # this takes a small but noticeable amount of time so render after refreshing everything else
         if self._board.is_in_check(self._player):
             self._text_con.render_status('check')
         terminal.refresh()
+        best_move_coords = self._long_notation_parser.parse_to_coords(self._stockfish.get_best_move())
+        self._board_con.set_hint_coords(best_move_coords)
 
     def _get_move(self):
         if self._player not in self._stockfish_lvl_by_player:
@@ -128,6 +127,7 @@ class Game():
         self._player = Player.other(self._player)
         self._text_con.set_player(self._player)
         self._move_number += 1
+        self._hint_level = 0
 
     def _read_input(self, max: int) -> str:
         input = ''
@@ -163,6 +163,7 @@ class Game():
             return True
         elif key == self.HINT_KEY:
             self._hint_level = min(self._hint_level + 1, 2)
+            self._board_con.render_hint(hint_level=self._hint_level, board=self._board)
             return True
         return False
 

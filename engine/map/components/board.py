@@ -7,6 +7,7 @@ from engine.map.components.coordinate import Coordinate
 from engine.map.components.move import Move
 from engine.map.components.move_result import MoveResult
 from engine.map.components.piece import *
+from engine.map.components.tile import Tile
 from engine.map.util.castle_spec import CastleSpec, get_castle_spec_for_king_coords
 from engine.map.util.player import Player
 from engine.map.util.tile_map import TileGenerator
@@ -36,6 +37,9 @@ class Board:
 
     def get_tiles(self):
         return self._tile_generator.get_tiles(self._board_array)
+
+    def get_tile_at(self, coord: Coordinate) -> Tile:
+        return self._tile_generator.get_tile_at(self._board_array, coord)
 
     def make_move(self, move: Move, captures, move_number: int) -> MoveResult:
         if move.long_notation_start_coord:

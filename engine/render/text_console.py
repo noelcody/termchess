@@ -64,7 +64,7 @@ class TextConsole():
         self._clear_detail()
         terminal.puts(
             self._col, self._detail_row,
-            str.format('[color=gray][[ESC: Return to menu]] [[F1: Show engine score]]'),
+            str.format('[color=gray][[ESC: Return to menu]] [[F1: Show engine score]] [[/: Show move hint]]'),
         )
         terminal.refresh()
 

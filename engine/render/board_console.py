@@ -1,7 +1,10 @@
+from typing import Tuple
+
 from bearlibterminal import terminal
 
 from config import Config
 from engine.map.components.board import Board
+from engine.map.components.coordinate import Coordinate
 from engine.map.components.tile import Tile
 
 
@@ -15,15 +18,20 @@ class BoardConsole:
         for tile in board.get_tiles():
             self._render(tile=tile)
 
-    def _render_hint(self):
-        terminal.clear_area(0, self._hint_row, 1000, 1)
-        if self._hint_level == 0:
+    def set_hint_coords(self, coords: Tuple[Coordinate, Coordinate]):
+        self._hint_coords = coords
+
+    def render_hint(self, hint_level, board: Board):
+        if hint_level == 0:
             return
-        elif self._hint_level == 1:
-            hint = self._move_hints[0]
-        else:
-            hint = str.format('{}{}', self._move_hints[0], self._move_hints[1])
-        terminal.puts(self._col, self._hint_row, str.format('[color=gray][[Hint: {}]]', hint))
+        if hint_level >= 1:
+            start_tile = board.get_tile_at(self._hint_coords[0])
+            start_tile.bg_color = Config.HIGHLIGHT_SQ_COLOR
+            self._render(start_tile)
+        if hint_level == 2:
+            dest_tile = board.get_tile_at(self._hint_coords[1])
+            dest_tile.bg_color = Config.HIGHLIGHT_SQ_COLOR
+            self._render(dest_tile)
 
     def _render(self, tile: Tile):
         render_string = str.format("[font=chess][color={}][bkcolor={}]{}", tile.char_color,
@@ -32,16 +40,14 @@ class BoardConsole:
         self._render_board2(tile, render_string)
 
     def _render_board1(self, tile, string):
-        terminal.puts(
-            self._col + (tile.coordinate.col * Config.CHESS_FONT_SPACING_COL),
-            self._row + (tile.coordinate.row * Config.CHESS_FONT_SPACING_ROW),
-            string,
-        )
+        col = self._col + (tile.coordinate.col * Config.CHESS_FONT_SPACING_COL)
+        row = self._row + (tile.coordinate.row * Config.CHESS_FONT_SPACING_ROW)
+        terminal.clear_area(col, row, 1, 1)
+        terminal.puts(col, row, string)
 
     def _render_board2(self, tile, string):
-        terminal.puts(
-            self._col + (abs(tile.coordinate.col - 7) * Config.CHESS_FONT_SPACING_COL) + (
-                    (8 + Config.BOARD_GAP) * Config.CHESS_FONT_SPACING_COL),
-            self._row + (abs(tile.coordinate.row - 7) * Config.CHESS_FONT_SPACING_ROW),
-            string,
-        )
+        col = self._col + (abs(tile.coordinate.col - 7) * Config.CHESS_FONT_SPACING_COL) + (
+                (8 + Config.BOARD_GAP) * Config.CHESS_FONT_SPACING_COL)
+        row = self._row + (abs(tile.coordinate.row - 7) * Config.CHESS_FONT_SPACING_ROW)
+        terminal.clear_area(col, row, 1, 1)
+        terminal.puts(col, row, string)

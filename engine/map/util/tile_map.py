@@ -11,6 +11,10 @@ class TileGenerator:
             for col in range(len(tile_grid[0])):
                 yield tile_grid[row][col]
 
+    def get_tile_at(self, board_array, coord: Coordinate):
+        tile_grid = self._get_tile_grid(board_array)
+        return tile_grid[coord.row][coord.col]
+
     def _get_tile_grid(self, board_array):
         tile_grid = []
         is_dark_square = False

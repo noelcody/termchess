@@ -4,6 +4,8 @@ class Config:
     WHITE_PIECE_COLOR = 'white'
     BLACK_PIECE_COLOR = 'black'
 
+    HIGHLIGHT_SQ_COLOR = 'azure'
+
     SELECTED_COLOR = '#C9C6C9'
     RED_COLOR = 'crimson'
 
