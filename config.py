@@ -4,8 +4,8 @@ class Config:
     WHITE_PIECE_COLOR = 'white'
     BLACK_PIECE_COLOR = 'black'
 
-    SELECTED_COLOR = '#C9C6C9' #C5BFC5
-    RED_COLOR = 'crimson'#F38471'
+    SELECTED_COLOR = '#C9C6C9'
+    RED_COLOR = 'crimson'
 
     BOARD_GAP = 1
 
@@ -18,6 +18,4 @@ class Config:
     TEXT_CON_ROW = 30
     CAPTURES_CON_ROW = 27
 
-    SHOW_SCORE = False
-
-    DEBUG = False
+    DEBUG = True

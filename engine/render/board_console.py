@@ -15,6 +15,16 @@ class BoardConsole:
         for tile in board.get_tiles():
             self._render(tile=tile)
 
+    def _render_hint(self):
+        terminal.clear_area(0, self._hint_row, 1000, 1)
+        if self._hint_level == 0:
+            return
+        elif self._hint_level == 1:
+            hint = self._move_hints[0]
+        else:
+            hint = str.format('{}{}', self._move_hints[0], self._move_hints[1])
+        terminal.puts(self._col, self._hint_row, str.format('[color=gray][[Hint: {}]]', hint))
+
     def _render(self, tile: Tile):
         render_string = str.format("[font=chess][color={}][bkcolor={}]{}", tile.char_color,
                                    tile.bg_color, tile.char)

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from engine.input.coordinate_parser import CoordinateParser
 from engine.map.components.coordinate import Coordinate

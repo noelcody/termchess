@@ -1,5 +1,3 @@
-# http://www.metachris.com/2015/11/create-standalone-mac-os-x-applications-with-python-and-py2app/
-
 from setuptools import setup
 
 APP = ['main.py']
@@ -12,9 +10,9 @@ setup(
     name='TermChess',
     version='',
     packages=['engine', 'engine.map', 'engine.map.util', 'engine.map.components', 'engine.input', 'engine.render'],
-    url='',
+    url='https://github.com/noelcody/termchess',
     license='',
-    author='',
+    author='noel cody',
     author_email='',
     description='',
     app=APP,

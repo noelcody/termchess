@@ -1,11 +1,11 @@
 from bearlibterminal import terminal
 
 from config import Config
-from engine.game import Game, GameOverException
+from engine.game import Game, GameOverException, BackToMenuException, RetryMoveException
 from engine.menu import Menu, GameStartException
 from engine.render.board_console import BoardConsole
 from engine.render.captures_console import CapturesConsole
-from engine.render.text_console import TextConsole, BackToMenuException
+from engine.render.text_console import TextConsole
 
 COLS = 112
 ROWS = 40
@@ -44,6 +44,8 @@ class Engine():
         while True:
             try:
                 game.loop()
+            except RetryMoveException:
+                continue
             except GameOverException:
                 # wait for any input
                 key = terminal.read()
