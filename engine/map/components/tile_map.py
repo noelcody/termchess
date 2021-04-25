@@ -5,15 +5,16 @@ from engine.map.components.tile import Tile
 
 class TileGenerator:
 
-    def get_tiles(self, board_array):
-        tile_grid = self._get_tile_grid(board_array)
-        for row in range(len(tile_grid)):
-            for col in range(len(tile_grid[0])):
-                yield tile_grid[row][col]
+    def refresh_tiles(self, board_array):
+        self._tile_grid = self._get_tile_grid(board_array)
 
-    def get_tile_at(self, board_array, coord: Coordinate):
-        tile_grid = self._get_tile_grid(board_array)
-        return tile_grid[coord.row][coord.col]
+    def get_tiles(self):
+        for row in range(len(self._tile_grid)):
+            for col in range(len(self._tile_grid[0])):
+                yield self._tile_grid[row][col]
+
+    def get_tile_at(self, coord: Coordinate):
+        return self._tile_grid[coord.row][coord.col]
 
     def _get_tile_grid(self, board_array):
         tile_grid = []

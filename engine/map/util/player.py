@@ -1,4 +1,4 @@
 class Player:
     @staticmethod
     def other(player):
-        return abs(player - 3)
+        return 2 if player == 1 else 1

@@ -7,3 +7,6 @@ class Tile:
         self.bg_color = bg_color
         self.char = char if char else ' '
         self.char_color = char_color
+
+    def copy(self) -> "Tile":
+        return Tile(coordinate=self.coordinate, bg_color=self.bg_color, char=self.char, char_color=self.char_color)

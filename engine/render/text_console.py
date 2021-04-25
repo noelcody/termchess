@@ -31,7 +31,7 @@ class TextConsole():
     def render_green(self, message):
         terminal.puts(
             self._col + self._get_offset(), self._row,
-            str.format('[color={}]{}', 'green', message),
+            str.format('[color={}]{}', Config.GREEN_COLOR, message),
         )
 
     def render_status(self, status):
@@ -64,7 +64,7 @@ class TextConsole():
         self._clear_detail()
         terminal.puts(
             self._col, self._detail_row,
-            str.format('[color=gray][[ESC: Return to menu]] [[F1: Show engine score]] [[/: Show move hint]]'),
+            str.format('[color=gray][[ESC: Return to menu]] [[F1: Show engine score]] [[/: Show move hint]] [[.: Highlight weak pieces]]'),
         )
         terminal.refresh()
 

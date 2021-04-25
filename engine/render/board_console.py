@@ -1,10 +1,7 @@
-from typing import Tuple
-
 from bearlibterminal import terminal
 
 from config import Config
 from engine.map.components.board import Board
-from engine.map.components.coordinate import Coordinate
 from engine.map.components.tile import Tile
 
 
@@ -18,20 +15,27 @@ class BoardConsole:
         for tile in board.get_tiles():
             self._render(tile=tile)
 
-    def set_hint_coords(self, coords: Tuple[Coordinate, Coordinate]):
-        self._hint_coords = coords
+    def refresh(self, board: Board):
+        '''
+        re-rendering the board resets any highlighted tiles
+        '''
+        self.render(board)
 
-    def render_hint(self, hint_level, board: Board):
-        if hint_level == 0:
-            return
+    def render_hint(self, hint_level, hint_coords, board: Board):
         if hint_level >= 1:
-            start_tile = board.get_tile_at(self._hint_coords[0])
-            start_tile.bg_color = Config.HIGHLIGHT_SQ_COLOR
+            start_tile = board.get_tile_at(hint_coords[0]).copy()
+            start_tile.bg_color = Config.HINT_SQ_COLOR
             self._render(start_tile)
         if hint_level == 2:
-            dest_tile = board.get_tile_at(self._hint_coords[1])
-            dest_tile.bg_color = Config.HIGHLIGHT_SQ_COLOR
+            dest_tile = board.get_tile_at(hint_coords[1]).copy()
+            dest_tile.bg_color = Config.HINT_SQ_COLOR
             self._render(dest_tile)
+
+    def render_weak(self, weak_coords, board):
+        for coord in weak_coords:
+            tile = board.get_tile_at(coord).copy()
+            tile.bg_color = Config.WEAK_SQ_COLOR
+            self._render(tile)
 
     def _render(self, tile: Tile):
         render_string = str.format("[font=chess][color={}][bkcolor={}]{}", tile.char_color,

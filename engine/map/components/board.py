@@ -2,7 +2,6 @@ from typing import List, Tuple
 
 from engine.input.coordinate_parser import CoordinateParser
 from engine.input.long_notation_parser import LongNotationParser
-from engine.input.notation_parser import NotationParser
 from engine.map.components.coordinate import Coordinate
 from engine.map.components.move import Move
 from engine.map.components.move_result import MoveResult
@@ -10,7 +9,7 @@ from engine.map.components.piece import *
 from engine.map.components.tile import Tile
 from engine.map.util.castle_spec import CastleSpec, get_castle_spec_for_king_coords
 from engine.map.util.player import Player
-from engine.map.util.tile_map import TileGenerator
+from engine.map.components.tile_map import TileGenerator
 
 NON = Empty()
 
@@ -31,15 +30,32 @@ class Board:
                              [P_W(), P_W(), P_W(), P_W(), P_W(), P_W(), P_W(), P_W()],
                              [R_W(), N_W(), B_W(), Q_W(), K_W(), B_W(), N_W(), R_W()]]
         self._tile_generator = TileGenerator()
+        self._refresh_tiles()
 
     def _copy_board_array(self):
         return [row[:] for row in self._board_array]
 
+    def _refresh_tiles(self):
+        self._tile_generator.refresh_tiles(self._board_array)
+
     def get_tiles(self):
-        return self._tile_generator.get_tiles(self._board_array)
+        return self._tile_generator.get_tiles()
 
     def get_tile_at(self, coord: Coordinate) -> Tile:
-        return self._tile_generator.get_tile_at(self._board_array, coord)
+        return self._tile_generator.get_tile_at(coord)
+
+    def get_weak_coords(self, player) -> List[Coordinate]:
+        '''
+        Return weak coordinates for this player
+        '''
+        weak_coords = []
+        for coord in self._yield_coordinates():
+            piece = self._piece_at(coord)
+            if piece is None or piece.player != player:
+                continue
+            if not self._does_player_target(player, [coord]):
+                weak_coords.append(coord)
+        return weak_coords
 
     def make_move(self, move: Move, captures, move_number: int) -> MoveResult:
         if move.long_notation_start_coord:
@@ -50,17 +66,12 @@ class Board:
             start_coord, dest_coord = self._make_castle(move.player, CastleSpec(move.player, is_kingside=False))
         else:
             start_coord, dest_coord = self._make_move(move, captures, move_number)
+        self._refresh_tiles()
         return MoveResult(long_notation=self._long_notation_parser.parse_to_long_notation(start_coord, dest_coord,
                                                                                           move.promotion_piece_type))
 
     def is_in_check(self, player):
-        return self._is_any_threatened(player, [self._get_king_coord(player)])
-
-    def is_delivering_checkmate(self, player, captures):
-        for piece in captures[player]:
-            if isinstance(piece, King):
-                return True
-        return False
+        return self._does_player_target(Player.other(player), [self._get_king_coord(player)])
 
     def _make_exact_move(self, move, captures, move_number):
         # check for castle notation
@@ -91,7 +102,7 @@ class Board:
             raise IllegalMoveException('castle path is blocked')
         all_king_coords = Coordinate.get_straight_path(castle_spec.king_coord, castle_spec.dest_king_coord)
         all_king_coords.extend([castle_spec.king_coord, castle_spec.dest_king_coord])
-        if self._is_any_threatened(player, all_king_coords):
+        if self._does_player_target(Player.other(player), all_king_coords):
             raise IllegalMoveException('king would move through or into check')
 
     def _commit_castle(self, castle_spec):
@@ -139,16 +150,17 @@ class Board:
         '''
         prev_board_array = self._copy_board_array()
         piece = self._piece_at(start_coord)
-        is_capture = self._piece_at(dest_coord) is not NON
-        if is_capture:
+        # handle piece capture
+        if self._piece_at(dest_coord) is not NON:
+            captured_pawn = self._board_array[dest_coord.row][dest_coord.col]
+            captures[player].append(captured_pawn)
+        elif isinstance(piece, Pawn):
             maybe_enpassant_coord = self._maybe_get_enpassant_pawn_coord(player=player, coord=dest_coord,
                                                                          move_number=move_number)
-            if isinstance(piece, Pawn) and maybe_enpassant_coord:
-                captured_piece = self._board_array[maybe_enpassant_coord.row][maybe_enpassant_coord.col]
+            if maybe_enpassant_coord:
+                captured_pawn = self._board_array[maybe_enpassant_coord.row][maybe_enpassant_coord.col]
                 self._board_array[maybe_enpassant_coord.row][maybe_enpassant_coord.col] = NON
-            else:
-                captured_piece = self._board_array[dest_coord.row][dest_coord.col]
-            captures[player].append(captured_piece)
+                captures[player].append(captured_pawn)
         # update the piece's new square
         if promotion_piece_type:
             self._board_array[dest_coord.row][dest_coord.col] = promotion_piece_type(player=player)
@@ -285,16 +297,16 @@ class Board:
     def _maybe_get_enpassant_pawn_coord(self, player, coord: Coordinate, move_number: int):
         if player == 1:
             if coord.row != 2:
-                return False
+                return None
             maybe_enpassant_pawn_coord = Coordinate(row=coord.row + 1, col=coord.col)
         elif player == 2:
             if coord.row != 5:
-                return False
+                return None
             maybe_enpassant_pawn_coord = Coordinate(row=coord.row - 1, col=coord.col)
         else:
             raise SystemError()
         if not isinstance(self._piece_at(maybe_enpassant_pawn_coord), Pawn):
-            return False
+            return None
         if self._piece_at(maybe_enpassant_pawn_coord).can_enpassant_at_move_num == move_number - 1:
             return maybe_enpassant_pawn_coord
         else:
@@ -321,17 +333,17 @@ class Board:
                 return False
         return True
 
-    def _is_any_threatened(self, player, coords_to_check: List[Coordinate]):
+    def _does_player_target(self, player, coords_to_check: List[Coordinate]):
         for coord in self._yield_coordinates():
             piece = self._piece_at(coord)
-            if piece.player == player or piece is NON:
+            if piece.player != player or piece is NON:
                 continue
             for coord_to_check in coords_to_check:
-                if self._does_piece_threaten(Player.other(player), piece_coord=coord, dest_coord=coord_to_check):
+                if self._does_player_piece_target(player, piece_coord=coord, dest_coord=coord_to_check):
                     return True
         return False
 
-    def _does_piece_threaten(self, piece_player, piece_coord: Coordinate, dest_coord: Coordinate) -> bool:
+    def _does_player_piece_target(self, player, piece_coord: Coordinate, dest_coord: Coordinate) -> bool:
         piece = self._piece_at(piece_coord)
         if piece is NON:
             return False
@@ -346,4 +358,4 @@ class Board:
         if isinstance(piece, Knight):
             return self._is_legal_knight_move(piece_coord, dest_coord)
         if isinstance(piece, Pawn):
-            return self._is_legal_pawn_capture(piece_player, piece_coord, dest_coord)
+            return self._is_legal_pawn_capture(player, piece_coord, dest_coord)

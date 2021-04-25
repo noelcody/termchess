@@ -29,7 +29,6 @@ class RetryMoveException(Exception):
 
 
 class Game():
-    HINT_KEY = terminal.TK_SLASH
 
     def __init__(self, board_con: BoardConsole, text_con: TextConsole, captures_con: CapturesConsole,
                  player_options: Dict[int, MenuOption]):
@@ -39,6 +38,7 @@ class Game():
         self._move_long_notations = []
         self._hint_level = 0
         self._show_score = False
+        self._show_weak_squares = False
 
         self._text_con = text_con
         self._text_con.set_player(self._player)
@@ -67,12 +67,15 @@ class Game():
         self._text_con.set_evaluation(self._stockfish.get_evaluation())
         self._render_detail()
         terminal.refresh()
+
         # this takes a small but noticeable amount of time so render after refreshing everything else
         if self._board.is_in_check(self._player):
             self._text_con.render_status('check')
         terminal.refresh()
+
         best_move_coords = self._long_notation_parser.parse_to_coords(self._stockfish.get_best_move())
-        self._board_con.set_hint_coords(best_move_coords)
+        self._hint_coords = best_move_coords
+        self._weak_coords = self._board.get_weak_coords(Player.other(self._player))
 
     def _get_move(self):
         if self._player not in self._stockfish_lvl_by_player:
@@ -128,6 +131,7 @@ class Game():
         self._text_con.set_player(self._player)
         self._move_number += 1
         self._hint_level = 0
+        self._show_weak_squares = False
 
     def _read_input(self, max: int) -> str:
         input = ''
@@ -161,9 +165,19 @@ class Game():
             self._show_score = not self._show_score
             self._render_detail()
             return True
-        elif key == self.HINT_KEY:
-            self._hint_level = min(self._hint_level + 1, 2)
-            self._board_con.render_hint(hint_level=self._hint_level, board=self._board)
+        elif key == terminal.TK_SLASH:
+            self._hint_level = (self._hint_level + 1) % 3
+            if self._hint_level == 0:
+                self._board_con.refresh(self._board)
+            else:
+                self._board_con.render_hint(hint_level=self._hint_level, hint_coords=self._hint_coords, board=self._board)
+            return True
+        elif key == terminal.TK_PERIOD:
+            self._show_weak_squares = not self._show_weak_squares
+            if self._show_weak_squares:
+                self._board_con.render_weak(weak_coords=self._weak_coords, board=self._board)
+            else:
+                self._board_con.refresh(self._board)
             return True
         return False
 
